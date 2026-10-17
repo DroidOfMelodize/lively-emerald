@@ -138,6 +138,8 @@ static void ObjectEventExecHeldMovementAction(struct ObjectEvent *, struct Sprit
 static void UpdateObjectEventSpriteAnimPause(struct ObjectEvent *, struct Sprite *);
 static bool8 IsCoordOutsideObjectEventMovementRange(struct ObjectEvent *, s16, s16);
 static bool8 DoesObjectCollideWithObjectAt(struct ObjectEvent *, s16, s16);
+static u8 GetAmbientTileClass(s16 x, s16 y);
+static bool32 IsAmbientMovementType(u8 movementType);
 static void UpdateObjectEventOffscreen(struct ObjectEvent *, struct Sprite *);
 static void UpdateObjectEventSpriteVisibility(struct ObjectEvent *, struct Sprite *);
 static void ObjectEventUpdateMetatileBehaviors(struct ObjectEvent *);
@@ -349,10 +351,13 @@ static void (*const sMovementTypeCallbacks[])(struct Sprite *) =
     [MOVEMENT_TYPE_WATCH_PLAYER_OWE] = MovementType_OverworldWildEncounter_WatchPlayer,
     [MOVEMENT_TYPE_APPROACH_PLAYER_OWE] = MovementType_OverworldWildEncounter_ApproachPlayer,
     [MOVEMENT_TYPE_DESPAWN_OWE] = MovementType_OverworldWildEncounter_Despawn,
+    [MOVEMENT_TYPE_AMBIENT_WANDER] = MovementType_AmbientWander,
+    [MOVEMENT_TYPE_AMBIENT_PERCH] = MovementType_AmbientPerch,
 };
 
 static const bool8 sMovementTypeHasRange[NUM_MOVEMENT_TYPES] = {
     [MOVEMENT_TYPE_WANDER_AROUND] = TRUE,
+    [MOVEMENT_TYPE_AMBIENT_WANDER] = TRUE,
     [MOVEMENT_TYPE_WANDER_UP_AND_DOWN] = TRUE,
     [MOVEMENT_TYPE_WANDER_DOWN_AND_UP] = TRUE,
     [MOVEMENT_TYPE_WANDER_LEFT_AND_RIGHT] = TRUE,
@@ -397,6 +402,8 @@ static const bool8 sMovementTypeHasRange[NUM_MOVEMENT_TYPES] = {
 
 const u8 gInitialMovementTypeFacingDirections[NUM_MOVEMENT_TYPES] = {
     [MOVEMENT_TYPE_NONE] = DIR_SOUTH,
+    [MOVEMENT_TYPE_AMBIENT_WANDER] = DIR_SOUTH,
+    [MOVEMENT_TYPE_AMBIENT_PERCH] = DIR_SOUTH,
     [MOVEMENT_TYPE_LOOK_AROUND] = DIR_SOUTH,
     [MOVEMENT_TYPE_WANDER_AROUND] = DIR_SOUTH,
     [MOVEMENT_TYPE_WANDER_UP_AND_DOWN] = DIR_NORTH,
@@ -3894,6 +3901,62 @@ bool8 MovementType_WanderAround_Step6(struct ObjectEvent *objectEvent, struct Sp
         sprite->sTypeFuncId = 1;
     }
     return FALSE;
+}
+
+// Lively Emerald: decorative ambient Pokémon.
+// They never interact with the player (their templates have no script), and they only ever
+// move onto tiles of the same kind as the tile they spawned on, so a Pokémon placed on trees
+// stays on trees, one in an unreachable pond stays in the water, and so on.
+enum
+{
+    AMBIENT_TILE_OPEN,
+    AMBIENT_TILE_BLOCKED,
+    AMBIENT_TILE_WATER,
+};
+
+static u8 GetAmbientTileClass(s16 x, s16 y)
+{
+    if (MetatileBehavior_IsSurfableFishableWater(MapGridGetMetatileBehaviorAt(x, y)))
+        return AMBIENT_TILE_WATER;
+    if (MapGridGetCollisionAt(x, y))
+        return AMBIENT_TILE_BLOCKED;
+    return AMBIENT_TILE_OPEN;
+}
+
+static bool32 IsAmbientMovementType(u8 movementType)
+{
+    return movementType == MOVEMENT_TYPE_AMBIENT_WANDER || movementType == MOVEMENT_TYPE_AMBIENT_PERCH;
+}
+
+static bool32 IsAmbientStepBlocked(struct ObjectEvent *objectEvent, enum Direction direction)
+{
+    s16 x = objectEvent->currentCoords.x;
+    s16 y = objectEvent->currentCoords.y;
+
+    MoveCoords(direction, &x, &y);
+    if (IsCoordOutsideObjectEventMovementRange(objectEvent, x, y))
+        return TRUE;
+    if (GetMapBorderIdAt(x, y) == CONNECTION_INVALID)
+        return TRUE;
+    if (GetAmbientTileClass(x, y) != GetAmbientTileClass(objectEvent->initialCoords.x, objectEvent->initialCoords.y))
+        return TRUE;
+    if (DoesObjectCollideWithObjectAt(objectEvent, x, y))
+        return TRUE;
+    return FALSE;
+}
+
+movement_type_def(MovementType_AmbientWander, gMovementTypeFuncs_AmbientWander)
+movement_type_def(MovementType_AmbientPerch, gMovementTypeFuncs_AmbientPerch)
+
+bool8 MovementType_AmbientWander_Step4(struct ObjectEvent *objectEvent, struct Sprite *sprite)
+{
+    enum Direction chosenDirection = gStandardDirections[Random() & 3];
+    SetObjectEventDirection(objectEvent, chosenDirection);
+    sprite->sTypeFuncId = 5;
+    if (IsAmbientStepBlocked(objectEvent, chosenDirection))
+        sprite->sTypeFuncId = 1;
+
+    return TRUE;
 }
 
 bool8 ObjectEventIsTrainerAndCloseToPlayer(struct ObjectEvent *objectEvent)
@@ -9960,6 +10023,16 @@ static void UpdateObjectEventElevationAndPriority(struct ObjectEvent *objEvent, 
 
     sprite->subspriteTableNum = sElevationToSubspriteTableNum[objEvent->previousElevation];
     sprite->oam.priority = sElevationToPriority[objEvent->previousElevation];
+
+    // Lively Emerald: ambient Pokémon standing on trees or roofs are drawn above the
+    // top tile layer, so they appear to sit on top instead of being hidden underneath.
+    if (IsAmbientMovementType(objEvent->movementType)
+     && GetAmbientTileClass(objEvent->currentCoords.x, objEvent->currentCoords.y) == AMBIENT_TILE_BLOCKED)
+    {
+        sprite->oam.priority = 1;
+        if (OW_LARGE_OW_SUPPORT)
+            sprite->subspriteMode = SUBSPRITES_IGNORE_PRIORITY;
+    }
 }
 
 static void InitObjectPriorityByElevation(struct Sprite *sprite, u8 elevation)

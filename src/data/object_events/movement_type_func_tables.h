@@ -34,6 +34,24 @@ enum Direction (*const gGetVectorDirectionFuncs[])(s16, s16, s16, s16) = {
     GetLimitedVectorDirection_SouthWestEast,
 };
 
+u8 (*const gMovementTypeFuncs_AmbientWander[])(struct ObjectEvent *, struct Sprite *) = {
+    MovementType_WanderAround_Step0,
+    MovementType_WanderAround_Step1,
+    MovementType_WanderAround_Step2,
+    MovementType_Wander_Step3,
+    MovementType_AmbientWander_Step4,
+    MovementType_WanderAround_Step5Slower,
+    MovementType_WanderAround_Step6,
+};
+
+u8 (*const gMovementTypeFuncs_AmbientPerch[])(struct ObjectEvent *, struct Sprite *) = {
+    MovementType_LookAround_Step0,
+    MovementType_LookAround_Step1,
+    MovementType_LookAround_Step2,
+    MovementType_LookAround_Step3,
+    MovementType_LookAround_Step4,
+};
+
 u8 (*const gMovementTypeFuncs_LookAround[])(struct ObjectEvent *, struct Sprite *) = {
     MovementType_LookAround_Step0,
     MovementType_LookAround_Step1,

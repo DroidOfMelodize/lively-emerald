@@ -281,6 +281,8 @@ void MovementType_None(struct Sprite *sprite);
 void MovementType_LookAround(struct Sprite *sprite);
 void MovementType_WanderAround(struct Sprite *sprite);
 void MovementType_WanderAroundSlower(struct Sprite *sprite);
+void MovementType_AmbientWander(struct Sprite *sprite);
+void MovementType_AmbientPerch(struct Sprite *sprite);
 void MovementType_WanderUpAndDown(struct Sprite *sprite);
 void MovementType_WanderLeftAndRight(struct Sprite *sprite);
 void MovementType_FaceDirection(struct Sprite *sprite);
@@ -348,6 +350,7 @@ u8 MovementType_WanderAround_Step4(struct ObjectEvent *objectEvent, struct Sprit
 u8 MovementType_WanderAround_Step5(struct ObjectEvent *objectEvent, struct Sprite *sprite);
 u8 MovementType_WanderAround_Step5Slower(struct ObjectEvent *objectEvent, struct Sprite *sprite);
 u8 MovementType_WanderAround_Step6(struct ObjectEvent *objectEvent, struct Sprite *sprite);
+u8 MovementType_AmbientWander_Step4(struct ObjectEvent *objectEvent, struct Sprite *sprite);
 enum Direction GetVectorDirection(s16 dx, s16 dy, s16 absdx, s16 absdy);
 enum Direction GetLimitedVectorDirection_SouthNorth(s16 dx, s16 dy, s16 absdx, s16 absdy);
 enum Direction GetLimitedVectorDirection_WestEast(s16 dx, s16 dy, s16 absdx, s16 absdy);

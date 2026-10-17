@@ -91,7 +91,10 @@
 #define MOVEMENT_TYPE_WATCH_PLAYER_OWE                 0x56
 #define MOVEMENT_TYPE_APPROACH_PLAYER_OWE              0x57
 #define MOVEMENT_TYPE_DESPAWN_OWE                      0x58
-#define NUM_MOVEMENT_TYPES                             0x59
+// Lively Emerald: decorative, non-interactive Pokémon
+#define MOVEMENT_TYPE_AMBIENT_WANDER                   0x59 // Wanders within its range, only onto tiles of the same kind as its spawn tile (blocked, water or open ground)
+#define MOVEMENT_TYPE_AMBIENT_PERCH                    0x5A // Stays in place and looks around (e.g. birds on roofs/trees)
+#define NUM_MOVEMENT_TYPES                             0x5B
 
 #define MOVEMENT_ACTION_FACE_DOWN                       0x0
 #define MOVEMENT_ACTION_FACE_UP                         0x1

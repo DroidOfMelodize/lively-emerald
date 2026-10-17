@@ -1,0 +1,16 @@
+{
+  "_comment": "Decorative ambient Pokemon per map. Apply with: python3 tools/lively/ambient_pokemon.py apply. movement: wander (range_x/range_y tiles around the spawn) or perch (stays put, looks around). Routes use species from their own encounter table; towns use a hand-picked list.",
+  "maps": {
+    "LittlerootTown": [
+      { "species": "TAILLOW", "x": 4,  "y": 5,  "movement": "perch" },
+      { "species": "TAILLOW", "x": 15, "y": 5,  "movement": "perch" },
+      { "species": "WURMPLE", "x": 5,  "y": 0,  "movement": "wander", "range_x": 2, "range_y": 1 },
+      { "species": "WURMPLE", "x": 18, "y": 18, "movement": "wander", "range_x": 1, "range_y": 1 }
+    ],
+    "Route101": [
+      { "species": "WURMPLE", "x": 4,  "y": 0,  "movement": "wander", "range_x": 2, "range_y": 1 },
+      { "species": "WURMPLE", "x": 1,  "y": 10, "movement": "wander", "range_x": 1, "range_y": 1 },
+      { "species": "WURMPLE", "x": 15, "y": 17, "movement": "wander", "range_x": 2, "range_y": 1 }
+    ]
+  }
+}
